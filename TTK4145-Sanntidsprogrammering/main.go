@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Elevator System Starting...")
+	fmt.Println("Elevator System Starting... kjør da")
 
 	// Initialize elevator hardware
 	numFloors := configuration.NumFloors
@@ -21,31 +21,32 @@ func main() {
 	buttonPressedChannel := make(chan elevio.ButtonEvent)
 
 	// Polling channels
-	// drv_buttons := make(chan elevio.ButtonEvent)
-	// drv_floors := make(chan int)
-	// drv_obstr := make(chan bool)
-	// drv_stop := make(chan bool)
+
+	drv_buttons := make(chan elevio.ButtonEvent)
+	drv_floors := make(chan int)
+	drv_obstr := make(chan bool)
+	drv_stop := make(chan bool)
 
 	// Start FSM
 	go elevio.PollButtons(buttonPressedChannel)
 
-	// go single_elevator.OrderManager(newOrderChannel, completedOrderChannel, buttonPressedChannel)
-	//go order_manager.Run(newOrderChannel, completedOrderChannel, buttonPressedChannel, network_tx, network_rx) - order manager erstattes
+	go single_elevator.OrderManager(newOrderChannel, completedOrderChannel, buttonPressedChannel)
+	//go order_manager.Run(newOrderChannel, completedOrderChannel, buttonPressedChannel, network_tx, network_rx) //- order manager erstattes
 	go single_elevator.SingleElevator(newOrderChannel, completedOrderChannel, newLocalStateChannel)
 
-	// time.Sleep(10*time.Second)
-	// exampleOrder := single_elevator.Orders {}
+	//time.Sleep(10*time.Second)
+	//exampleOrder := single_elevator.Orders {}
 	// exampleOrder[0][1] = true
 
 	// newOrderChannel <- exampleOrder
 
 	//go order manager
 
-	// Start polling inputs
-	// go elevio.PollButtons(drv_buttons)
-	// go elevio.PollFloorSensor(drv_floors) gjort
-	// go elevio.PollObstructionSwitch(drv_obstr) gjort
-	// go elevio.PollStopButton(drv_stop) gjort
+	//Start polling inputs
+	go elevio.PollButtons(drv_buttons)
+	go elevio.PollFloorSensor(drv_floors)      //gjort
+	go elevio.PollObstructionSwitch(drv_obstr) // gjort
+	go elevio.PollStopButton(drv_stop)         // gjort
 
 	select {}
 }

@@ -83,7 +83,7 @@ func SingleElevator(
 	timerOutChannel := make(chan bool)
 	resetTimerChannel := make(chan bool)
 	go runTimer(configuration.DoorOpenDuration, timerOutChannel, resetTimerChannel)
-	// go startTimer(configuration.DoorOpenDuration, timerOutChannel)
+	//go startTimer(configuration.DoorOpenDuration, timerOutChannel)
 
 	go elevio.PollObstructionSwitch(obstructedChannel)
 	go elevio.PollStopButton(stopPressedChannel)
@@ -122,6 +122,7 @@ func SingleElevator(
 				elevio.SetStopLamp(false)
 			}
 		case state.Obstructed = <-obstructedChannel:
+			fmt.Printf("Obstruction on")
 			switch state.Behaviour {
 			case DoorOpen:
 				resetTimerChannel <- true
