@@ -114,6 +114,7 @@ func SingleElevator(
 				panic("timeroutchannel in moving")
 			}
 		case stopbuttonpressed := <-stopPressedChannel:
+
 			if stopbuttonpressed {
 				fmt.Println("StopButton is pressed")
 				elevio.SetStopLamp(true)
@@ -121,16 +122,40 @@ func SingleElevator(
 			} else {
 				elevio.SetStopLamp(false)
 			}
-		case state.Obstructed = <-obstructedChannel:
-			fmt.Printf("Obstruction on")
-			switch state.Behaviour {
-			case DoorOpen:
-				resetTimerChannel <- true
-				fmt.Println("Obstruction switch ON")
-				newLocalStateChannel <- state //NEW LOCAL STATE MÅ OPPDATERES OVERALT
-			case Moving, Idle:
-				//continue
-			}
+			//hva må man gjøre. Skrive reset time channel case for obstruction
+			//for løkke//finne ut oppdatering på obstruction, skjer kun når ting endrer seg
+
+			
+				case state.Obstructed = <-obstructedChannel:
+
+					if state.Obstructed {
+						state.Unavailable = true
+						fmt.Println("Obstruction detected! Elevator unavailable")
+						state.Behaviour = DoorOpen
+						elevio.SetDoorOpenLamp(true)
+						newLocalStateChannel <- state
+						resetTimerChannel <- true
+
+					} else {
+						fmt.Println("Obstruction cleared! Elevator available.")
+						state.Unavailable = false
+						newLocalStateChannel <- state
+						if state.Behaviour == DoorOpen {
+							resetTimerChannel <- true
+						}
+						newLocalStateChannel <- state
+					}
+			
+			/*
+				switch state.Behaviour {
+				case DoorOpen:
+					resetTimerChannel <- true
+					fmt.Println("Obstruction switch ON")
+					newLocalStateChannel <- state //NEW LOCAL STATE MÅ OPPDATERES OVERALT
+				case Moving, Idle:
+					continue
+				}
+			*/
 
 		case state.Floor = <-floorEnteredChannel: //if order at current floor
 			fmt.Println("New floor: ", state.Floor)
