@@ -125,27 +125,36 @@ func SingleElevator(
 			//hva må man gjøre. Skrive reset time channel case for obstruction
 			//for løkke//finne ut oppdatering på obstruction, skjer kun når ting endrer seg
 
-			
-				case state.Obstructed = <-obstructedChannel:
+		case obstruction := <-obstructedChannel:
+			if obstruction {
+				state.Obstructed = true
+				state.Unavailable = true
+				fmt.Println("Obstruction detected! Elevator unavailable")
+				state.Behaviour = DoorOpen
+				elevio.SetDoorOpenLamp(true)
+				newLocalStateChannel <- state
+				resetTimerChannel <- true
 
-					if state.Obstructed {
-						state.Unavailable = true
-						fmt.Println("Obstruction detected! Elevator unavailable")
-						state.Behaviour = DoorOpen
-						elevio.SetDoorOpenLamp(true)
-						newLocalStateChannel <- state
-						resetTimerChannel <- true
-
-					} else {
-						fmt.Println("Obstruction cleared! Elevator available.")
-						state.Unavailable = false
-						newLocalStateChannel <- state
+				// Hold døren aktiv mens obstruction er aktiv
+				for obstruction {
+					select {
+					case obstruction = <-obstructedChannel:
+						if !obstruction {
+							state.Obstructed = false
+							state.Unavailable = false
+							fmt.Println("Obstruction cleared! Elevator available.")
+							newLocalStateChannel <- state
+							if state.Behaviour == DoorOpen {
+								resetTimerChannel <- true
+							}
+						}
+					default:
 						if state.Behaviour == DoorOpen {
 							resetTimerChannel <- true
 						}
-						newLocalStateChannel <- state
 					}
-			
+				}
+			}
 			/*
 				switch state.Behaviour {
 				case DoorOpen:
